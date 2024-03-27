@@ -13,10 +13,75 @@ import (
 )
 
 func main() {
-	opFlName := OpFile()
 
-	getExcel(opFlName)
+	//open 11 prilozhenie
+	opFlName11 := OpFile()
 
+	csvData11 := getExcel11(opFlName11)
+	//fmt.Printf("%s\t", csvData11)
+
+	//open 5 prilozhenie
+	opFlName5 := OpFile()
+
+	csvData5 := getExcel5(opFlName5)
+	fmt.Printf("%s\t", csvData5)
+
+	var csvData [][]string
+
+	//combine two arrays from two files
+	fmt.Printf("%s\t", "combine")
+	for _, element11 := range csvData11 {
+		for _, element5 := range csvData5 {
+			if element11[0] == element5[0] {
+				//fmt.Printf("%s\t", "found")
+				csvLine := []string{
+					element11[0],
+					"x",
+					element11[1],
+					"",
+					"",
+					"ms",
+					"1",
+					"0",
+					"",
+					"0",
+					"0.5",
+					"0:00:00",
+					"0:00:10",
+					"swingingdoor",
+					"0",
+					element5[1],
+					"",
+					"local",
+					element11[2],
+					"",
+					"0",
+					"0",
+					"",
+					"1",
+					"1",
+					"1",
+					"1",
+					"",
+					"[\"common\"]",
+					"0",
+					"0",
+					"0:00:00",
+					"0:00:00",
+					"deadband",
+					"",
+					"0",
+					"0",
+					"-1",
+					"0",
+					"0",
+				}
+				csvData = append(csvData, csvLine)
+			}
+		}
+	}
+	//fmt.Printf("%s\t", csvData)
+	//save csv result
 	svFlName := SvFile()
 
 	file2, err := os.Create(svFlName)
@@ -67,11 +132,16 @@ func main() {
 		"Zero",
 	}
 	wr := csv.NewWriter(file2)
+	wr.Comma = ';'
 	wr.Write(csvHeaders)
+	for _, csvLine := range csvData {
+		wr.Write(csvLine)
+	}
 	wr.Flush()
+
 }
 
-func getExcel(string2 string) {
+func getExcel11(string2 string) [][]string {
 
 	//f, err := excelize.OpenFile(string2)
 	reportBytes, _ := os.ReadFile(string2)
@@ -89,19 +159,39 @@ func getExcel(string2 string) {
 		}
 	}()
 	// Get value from cell by given worksheet name and cell reference.
-
-	columnName := "A"
+	var csvData [][]string
 	sheetName := f.GetSheetList()[0]
-	totalNumberOfRows := 2
+	rosws, _ := f.GetSheetDimension(sheetName)
+	fmt.Sprintf("%d", len(rosws))
 
+	/*
+		for _, row := range rosws {
+
+			csvLine := []string{row[0], row[12], row[13]}
+			csvData = append(csvData, csvLine)
+			fmt.Print(row[12], "\n")
+
+			fmt.Println()
+		}*/
+	rre, _ := f.GetRows(sheetName)
+	fmt.Println(len(rre))
+	totalNumberOfRows := len(rre)
 	for i := 3; i < totalNumberOfRows; i++ {
-		cellName := fmt.Sprintf("%s%d", columnName, i)
-		// fmt.Println(cellName)
-		cellValue, _ := f.GetCellValue(sheetName, cellName)
-		fmt.Printf("%s\t", cellValue)
+		cellNameName := fmt.Sprintf("%s%d", "A", i)
+		cellValueName, _ := f.GetCellValue(sheetName, cellNameName)
+
+		cellNameType := fmt.Sprintf("%s%d", "M", i)
+		cellValueType, _ := f.GetCellValue(sheetName, cellNameType)
+
+		cellNameUnits := fmt.Sprintf("%s%d", "N", i)
+		cellValueUnits, _ := f.GetCellValue(sheetName, cellNameUnits)
+
+		csvLine := []string{cellValueName, cellValueType, cellValueUnits}
+		csvData = append(csvData, csvLine)
+		//fmt.Printf("%s\t", csvLine)
 	}
 
-	rows, err := f.Rows(f.GetSheetList()[0])
+	/*rows, err := f.Rows(f.GetSheetList()[0])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -119,7 +209,7 @@ func getExcel(string2 string) {
 		fmt.Printf(row[20]) // Print values in columns B and D
 		return
 
-	}
+	}*/
 
 	/*cell, err1 := f.GetCellValue(f.GetSheetList()[0], "B2")
 	if err1 != nil {
@@ -128,7 +218,58 @@ func getExcel(string2 string) {
 	fmt.Println(cell)*/
 	f.Close()
 
-	return
+	return csvData
+}
+
+func getExcel5(string2 string) [][]string {
+
+	reportBytes, _ := os.ReadFile(string2)
+	reader := bytes.NewReader(reportBytes)
+	f, err := excelize.OpenReader(reader)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	sheetName := f.GetSheetList()[0]
+	var csvData [][]string
+	/*rosws, _ := f.GetRows(sheetName)
+	fmt.Sprintf("%d", len(rosws))
+	//totalNumberOfRows := 35
+
+	for _, row := range rosws {
+
+		csvLine := []string{row[21], row[22]}
+		csvData = append(csvData, csvLine)
+		fmt.Print(row[12], "\n")
+
+		fmt.Println()
+	}
+	*/
+	rre, _ := f.GetRows(sheetName)
+	fmt.Println(len(rre))
+	totalNumberOfRows := len(rre)
+
+	for i := 3; i < totalNumberOfRows; i++ {
+		cellNameName := fmt.Sprintf("%s%d", "W", i)
+		cellValueName, _ := f.GetCellValue(sheetName, cellNameName)
+
+		cellNameDesc := fmt.Sprintf("%s%d", "X", i)
+		cellValueDesc, _ := f.GetCellValue(sheetName, cellNameDesc)
+
+		csvLine := []string{cellValueName, cellValueDesc}
+		csvData = append(csvData, csvLine)
+	}
+
+	f.Close()
+
+	return csvData
 }
 
 func OpFile() string {
