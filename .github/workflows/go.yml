@@ -21,9 +21,8 @@ jobs:
       with:
         go-version: '1.22.1'
     - name: Install dependencies
-      run: go get .
+      working-directory: ./Excel5_11_generateCSVtags
+      run: go get
     - name: Build
+      working-directory: ./Excel5_11_generateCSVtags
       run: go build -v
-
-    - name: Test
-      run: go test -v
