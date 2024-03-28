@@ -15,16 +15,16 @@ import (
 func main() {
 
 	//open 11 prilozhenie
-	opFlName11 := OpFile()
+	opFlName11 := OpFile("Открыть 11 прил")
 
 	csvData11 := getExcel11(opFlName11)
 	//fmt.Printf("%s\t", csvData11)
 
 	//open 5 prilozhenie
-	opFlName5 := OpFile()
+	opFlName5 := OpFile("Открыть 5 прил")
 
 	csvData5 := getExcel5(opFlName5)
-	fmt.Printf("%s\t", csvData5)
+	//fmt.Printf("%s\t", csvData5)
 
 	var csvData [][]string
 
@@ -34,50 +34,113 @@ func main() {
 		for _, element5 := range csvData5 {
 			if element11[0] == element5[0] {
 				//fmt.Printf("%s\t", "found")
-				csvLine := []string{
-					element11[0],
-					"x",
-					element11[1],
-					"",
-					"",
-					"ms",
-					"1",
-					"0",
-					"",
-					"0",
-					"0.5",
-					"0:00:00",
-					"0:00:10",
-					"swingingdoor",
-					"0",
-					element5[1],
-					"",
-					"local",
-					element11[2],
-					"",
-					"0",
-					"0",
-					"",
-					"1",
-					"1",
-					"1",
-					"1",
-					"",
-					"[\"common\"]",
-					"0",
-					"0",
-					"0:00:00",
-					"0:00:00",
-					"deadband",
-					"",
-					"0",
-					"0",
-					"-1",
-					"0",
-					"0",
+				appBool := true
+				for _, itemTest := range csvData {
+					if element11[0] == itemTest[0] {
+						appBool = false
+						//fmt.Println("Duplicate")
+					}
 				}
-				csvData = append(csvData, csvLine)
-			}
+				if appBool {
+					csvLine := []string{
+						element11[0],
+						"x",
+						element11[1],
+						"",
+						"",
+						"ms",
+						"1",
+						"0",
+						"",
+						"0",
+						"0.5",
+						"0:00:00",
+						"0:00:10",
+						"swingingdoor",
+						"0",
+						element5[1],
+						"",
+						"local",
+						element11[2],
+						"",
+						"0",
+						"0",
+						"",
+						"1",
+						"1",
+						"1",
+						"1",
+						"",
+						"[\"common\"]",
+						"0",
+						"0",
+						"0:00:00",
+						"0:00:00",
+						"deadband",
+						"",
+						"0",
+						"0",
+						"-1",
+						"0",
+						"0",
+					}
+					csvData = append(csvData, csvLine)
+				}
+
+			} /*else {
+				appBool := true
+				for _, itemTest := range csvData {
+					if element11[0] == itemTest[0] {
+						appBool = false
+						//fmt.Println("Duplicate")
+					}
+				}
+				if appBool {
+					csvLine := []string{
+						element11[0],
+						"TEST",
+						element11[1],
+						"",
+						"",
+						"ms",
+						"1",
+						"0",
+						"",
+						"0",
+						"0.5",
+						"0:00:00",
+						"0:00:10",
+						"swingingdoor",
+						"0",
+						element5[1],
+						"",
+						"local",
+						element11[2],
+						"",
+						"0",
+						"0",
+						"",
+						"1",
+						"1",
+						"1",
+						"1",
+						"",
+						"[\"common\"]",
+						"0",
+						"0",
+						"0:00:00",
+						"0:00:00",
+						"deadband",
+						"",
+						"0",
+						"0",
+						"-1",
+						"0",
+						"0",
+					}
+					csvData = append(csvData, csvLine)
+				}
+			}*/
 		}
 	}
 	//fmt.Printf("%s\t", csvData)
@@ -272,9 +335,9 @@ func getExcel5(string2 string) [][]string {
 	return csvData
 }
 
-func OpFile() string {
+func OpFile(wTitle string) string {
 	result, err := cfdutil.ShowOpenFileDialog(cfd.DialogConfig{
-		Title: "Open A File",
+		Title: wTitle,
 		Role:  "OpenFileExample",
 		FileFilters: []cfd.FileFilter{
 			{
