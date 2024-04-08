@@ -80,7 +80,8 @@ func main() {
 		//fmt.Println(d.Item.Text())
 	})
 	ls.AddColumn("tag name", 120)
-	ls.SetPos(10, 180)
+	ls.SetPos(0, 0)
+	ls.SetSize(300, 100)
 
 	openMn.OnClick().Bind(func(arg *winc.Event) {
 		/*if filePath, ok := winc.ShowOpenFileDlg(mainWindow,
@@ -103,7 +104,7 @@ func main() {
 	})
 
 	btnEdit := winc.NewPushButton(mainWindow)
-	btnEdit.SetText(" Edit")
+	btnEdit.SetText("Select All")
 	btnEdit.SetPos(0, 0)
 	btnEdit.SetSize(98, 38)
 	btnEdit.OnClick().Bind(func(arg *winc.Event) {
@@ -115,20 +116,15 @@ func main() {
 		}
 	})
 
-	left := winc.NewMultiEdit(mainWindow)
-	left.SetPos(5, 5)
-	left.SetSize(300, 38)
 	split := winc.NewVResizer(mainWindow)
-
 	mainWindow.Center()
 	mainWindow.Show()
 
 	dock := winc.NewSimpleDock(mainWindow)
 	//mainWindow.SetLayout(dock)
 	dock.Dock(btnEdit, winc.Top)
-	dock.Dock(left, winc.Left)
-	dock.Dock(split, winc.Left)
 	dock.Dock(ls, winc.Left)
+	dock.Dock(split, winc.Left)
 
 	// if err := dock.LoadStateFile("layout.json"); err != nil {
 	// 	log.Println(err)
@@ -178,9 +174,15 @@ func getExcel11(string2 string) []string {
 		cellNameName := fmt.Sprintf("%s%d", "A", i)
 		cellValueName, _ := f.GetCellValue(sheetName, cellNameName)
 
-		csvData = append(csvData, cellValueName)
-		//fmt.Printf("%s\t", csvLine)
+		//GET ONLY VISIBLE ROWS (FILTRED IN EXCEL)
+		include, _ := f.GetRowVisible(sheetName, i)
+		if include {
+			csvData = append(csvData, cellValueName)
+			//fmt.Printf("%s\t", cellValueName)
+		}
+
 	}
+	log.Println()
 
 	f.Close()
 
