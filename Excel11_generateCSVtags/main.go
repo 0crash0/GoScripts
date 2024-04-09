@@ -20,128 +20,56 @@ func main() {
 	csvData11 := getExcel11(opFlName11)
 	//fmt.Printf("%s\t", csvData11)
 
-	//open 5 prilozhenie
-	opFlName5 := OpFile("Открыть 5 прил")
-
-	csvData5 := getExcel5(opFlName5)
-	//fmt.Printf("%s\t", csvData5)
-
 	var csvData [][]string
 
 	//combine two arrays from two files
 	fmt.Printf("%s\t", "combine")
 	for _, element11 := range csvData11 {
-		for _, element5 := range csvData5 {
-			if element11[0] == element5[0] {
-				//fmt.Printf("%s\t", "found")
-				appBool := true
-				for _, itemTest := range csvData {
-					if element11[0] == itemTest[0] {
-						appBool = false
-						//fmt.Println("Duplicate")
-					}
-				}
-				if appBool {
-					csvLine := []string{
-						element11[0],
-						"x",
-						element11[1],
-						"",
-						"",
-						"ms",
-						"1",
-						"0",
-						"",
-						"0",
-						"0.5",
-						"0:00:00",
-						"0:00:10",
-						"swingingdoor",
-						"0",
-						element5[1],
-						"",
-						"local",
-						element11[2],
-						"",
-						"0",
-						"0",
-						"",
-						"1",
-						"1",
-						"1",
-						"1",
-						"",
-						"[\"common\"]",
-						"0",
-						"0",
-						"0:00:00",
-						"0:00:00",
-						"deadband",
-						"",
-						"0",
-						"0",
-						"-1",
-						"0",
-						"0",
-					}
-					csvData = append(csvData, csvLine)
-				}
 
-			} /*else {
-				appBool := true
-				for _, itemTest := range csvData {
-					if element11[0] == itemTest[0] {
-						appBool = false
-						//fmt.Println("Duplicate")
-					}
-				}
-				if appBool {
-					csvLine := []string{
-						element11[0],
-						"TEST",
-						element11[1],
-						"",
-						"",
-						"ms",
-						"1",
-						"0",
-						"",
-						"0",
-						"0.5",
-						"0:00:00",
-						"0:00:10",
-						"swingingdoor",
-						"0",
-						element5[1],
-						"",
-						"local",
-						element11[2],
-						"",
-						"0",
-						"0",
-						"",
-						"1",
-						"1",
-						"1",
-						"1",
-						"",
-						"[\"common\"]",
-						"0",
-						"0",
-						"0:00:00",
-						"0:00:00",
-						"deadband",
-						"",
-						"0",
-						"0",
-						"-1",
-						"0",
-						"0",
-					}
-					csvData = append(csvData, csvLine)
-				}
-			}*/
+		csvLine := []string{
+			element11[0],
+			"x",
+			element11[1],
+			"",
+			"",
+			"ms",
+			"1",
+			"0",
+			"",
+			"0",
+			"0.5",
+			"0:00:00",
+			"0:00:10",
+			"swingingdoor",
+			"0",
+			element11[3],
+			"",
+			"local",
+			element11[2],
+			element11[0],
+			"0",
+			"0",
+			"[\"csv-import\"]",
+			"1",
+			"1",
+			"1",
+			"1",
+			"",
+			"[\"common\"]",
+			"0",
+			"0",
+			"0:00:00",
+			"0:00:00",
+			"deadband",
+			"",
+			"0",
+			"0",
+			"-1",
+			"0",
+			"0",
 		}
+		csvData = append(csvData, csvLine)
+
 	}
 	//fmt.Printf("%s\t", csvData)
 	//save csv result
@@ -154,9 +82,9 @@ func main() {
 	defer file2.Close()
 	csvHeaders := []string{
 		"_Name",
-		"_Select (x)",
+		"_Select(x)",
 		"_ValueType",
-		"_Delete (x)",
+		"_Delete(x)",
 		"_NewName",
 		"Accuracy",
 		"Archive",
@@ -249,7 +177,10 @@ func getExcel11(string2 string) [][]string {
 		cellNameUnits := fmt.Sprintf("%s%d", "N", i)
 		cellValueUnits, _ := f.GetCellValue(sheetName, cellNameUnits)
 
-		csvLine := []string{cellValueName, cellValueType, cellValueUnits}
+		cellNameDscr := fmt.Sprintf("%s%d", "B", i)
+		cellNameDscrs, _ := f.GetCellValue(sheetName, cellNameDscr)
+
+		csvLine := []string{cellValueName, cellValueType, cellValueUnits, cellNameDscrs}
 
 		//GET ONLY VISIBLE ROWS (FILTERED IN EXCEL)
 		include, _ := f.GetRowVisible(sheetName, i)
@@ -286,57 +217,6 @@ func getExcel11(string2 string) [][]string {
 		fmt.Println(err1)
 	}
 	fmt.Println(cell)*/
-	f.Close()
-
-	return csvData
-}
-
-func getExcel5(string2 string) [][]string {
-
-	reportBytes, _ := os.ReadFile(string2)
-	reader := bytes.NewReader(reportBytes)
-	f, err := excelize.OpenReader(reader)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Println(err)
-		}
-	}()
-
-	sheetName := f.GetSheetList()[0]
-	var csvData [][]string
-	/*rosws, _ := f.GetRows(sheetName)
-	fmt.Sprintf("%d", len(rosws))
-	//totalNumberOfRows := 35
-
-	for _, row := range rosws {
-
-		csvLine := []string{row[21], row[22]}
-		csvData = append(csvData, csvLine)
-		fmt.Print(row[12], "\n")
-
-		fmt.Println()
-	}
-	*/
-	rre, _ := f.GetRows(sheetName)
-	fmt.Println(len(rre))
-	totalNumberOfRows := len(rre)
-
-	for i := 3; i < totalNumberOfRows; i++ {
-		cellNameName := fmt.Sprintf("%s%d", "W", i)
-		cellValueName, _ := f.GetCellValue(sheetName, cellNameName)
-
-		cellNameDesc := fmt.Sprintf("%s%d", "X", i)
-		cellValueDesc, _ := f.GetCellValue(sheetName, cellNameDesc)
-
-		csvLine := []string{cellValueName, cellValueDesc}
-		csvData = append(csvData, csvLine)
-	}
-
 	f.Close()
 
 	return csvData

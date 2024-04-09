@@ -2,10 +2,7 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
-	"github.com/harry1453/go-common-file-dialog/cfd"
-	"github.com/harry1453/go-common-file-dialog/cfdutil"
 	"github.com/tadvi/winc"
 	"github.com/xuri/excelize/v2"
 	"log"
@@ -35,9 +32,9 @@ func (item Item) ImageIndex() int          { return 0 }
 
 func main() {
 
-	var opFlName11 string
+	//var opFlName11 string
 
-	var tagIds []string
+	var tagIds [][]string
 	var items []Item
 	log.Println(tagIds)
 
@@ -51,19 +48,8 @@ func main() {
 	menu := mainWindow.NewMenu()
 	fileMn := menu.AddSubMenu("File")
 	openMn := fileMn.AddItem("Open", winc.Shortcut{winc.ModControl, winc.KeyO})
-
+	saveMn := fileMn.AddItem("Open", winc.Shortcut{winc.ModControl, winc.KeyS})
 	menu.Show()
-	/*
-		openMn.OnClick().Bind(func(e *winc.Event) {
-			dlg := winc.NewDialog(mainWindow)
-			dlg.Center()
-			dlg.Show()
-			dlg.OnClose().Bind(func(arg *winc.Event) {
-				dlg.Close()
-			})
-		})*/
-	//tipRun := winc.NewToolTip(mainWindow)
-	//tipRun.AddTool(btnRun, "Run project")
 
 	ls := winc.NewListView(mainWindow)
 	ls.EnableEditLabels(true)
@@ -84,33 +70,49 @@ func main() {
 	ls.SetSize(300, 100)
 
 	openMn.OnClick().Bind(func(arg *winc.Event) {
-		/*if filePath, ok := winc.ShowOpenFileDlg(mainWindow,
-			"Select EDI X12 file", "All files (*.*)|*.*", 0, ""); ok {
+		if filePath, ok := winc.ShowOpenFileDlg(mainWindow,
+			"Открыть 11 прил", "Excel files (*.xls;*.xlsx;*.xlsm)|*.xls;*.xlsx;*.xlsm|All files (*.*)|*.*", 0, ""); ok {
 
-			if err := imgv.DrawImageFile(filePath); err != nil {
-				winc.Errorf(mainWindow, "Error: %s", err)
+			//opFlName11 = OpFile("Открыть 11 прил")
+			tagIds = getExcel11(filePath)
+
+			for _, s := range tagIds {
+				items = append(items, Item{[]string{s[0]}, false})
+
 			}
-		}*/
-		opFlName11 = OpFile("Открыть 11 прил")
-		tagIds = getExcel11(opFlName11)
-
-		for _, s := range tagIds {
-			items = append(items, Item{[]string{s}, false})
-
+			for _, s := range items {
+				ls.AddItem(&s)
+			}
 		}
-		for _, s := range items {
-			ls.AddItem(&s)
-		}
+
 	})
 
-	btnEdit := winc.NewPushButton(mainWindow)
-	btnEdit.SetText("Select All")
-	btnEdit.SetPos(0, 0)
-	btnEdit.SetSize(98, 38)
-	btnEdit.OnClick().Bind(func(arg *winc.Event) {
+	ls.EnableSortHeader(true)
+
+	btnDelAll := winc.NewPushButton(mainWindow)
+	btnDelAll.SetText("Delete Selected")
+	btnDelAll.SetPos(0, 0)
+	btnDelAll.SetSize(98, 38)
+	btnDelAll.OnClick().Bind(func(arg *winc.Event) {
+		fmt.Println()
 		ls.DeleteAllItems()
-		for i, s := range items {
-			fmt.Println(i, s)
+
+	})
+	edt := winc.NewEdit(mainWindow)
+	edt.SetPos(10, 20)
+	edt.SetSize(200, 20)
+	edt.SetText("edit text")
+	chk := winc.NewCheckBox(mainWindow)
+	chk.SetText("sads")
+
+	btnSelAll := winc.NewPushButton(mainWindow)
+	btnSelAll.SetText("Select All")
+	btnSelAll.SetPos(0, 0)
+	btnSelAll.SetSize(98, 38)
+	btnSelAll.OnClick().Bind(func(arg *winc.Event) {
+		ls.DeleteAllItems()
+		for _, s := range items {
+			//fmt.Println(i, s)
 			s.checked = true
 			ls.AddItem(&s)
 		}
@@ -122,13 +124,26 @@ func main() {
 
 	dock := winc.NewSimpleDock(mainWindow)
 	//mainWindow.SetLayout(dock)
-	dock.Dock(btnEdit, winc.Top)
+	dock.Dock(btnDelAll, winc.Top)
+	dock.Dock(btnSelAll, winc.Top)
 	dock.Dock(ls, winc.Left)
 	dock.Dock(split, winc.Left)
+	dock.Dock(edt, winc.Left)
+	dock.Dock(chk, winc.Bottom)
 
 	// if err := dock.LoadStateFile("layout.json"); err != nil {
 	// 	log.Println(err)
 	// }
+
+	saveMn.OnClick().Bind(func(arg *winc.Event) {
+		/*if filePath, ok := winc.ShowSaveFileDlg(mainWindow,
+			"Открыть 11 прил", "Excel files (*.xls;*.xlsx;*.xlsm)|*.xls;*.xlsx;*.xlsm|All files (*.*)|*.*", 0, ""); ok {
+
+			//opFlName11 = OpFile("Открыть 11 прил")
+
+		}*/
+
+	})
 
 	mainWindow.OnClose().Bind(func(e *winc.Event) {
 		dock.SaveStateFile("layout.json") // error gets ignored
@@ -144,7 +159,7 @@ func main() {
 	// --- end of Dock and main window management
 
 }
-func getExcel11(string2 string) []string {
+func getExcel11(string2 string) [][]string {
 
 	//f, err := excelize.OpenFile(string2)
 	reportBytes, _ := os.ReadFile(string2)
@@ -162,11 +177,20 @@ func getExcel11(string2 string) []string {
 		}
 	}()
 	// Get value from cell by given worksheet name and cell reference.
-	var csvData []string
+	var csvData [][]string
 	sheetName := f.GetSheetList()[0]
 	rosws, _ := f.GetSheetDimension(sheetName)
 	fmt.Sprintf("%d", len(rosws))
 
+	/*
+		for _, row := range rosws {
+
+			csvLine := []string{row[0], row[12], row[13]}
+			csvData = append(csvData, csvLine)
+			fmt.Print(row[12], "\n")
+
+			fmt.Println()
+		}*/
 	rre, _ := f.GetRows(sheetName)
 	fmt.Println(len(rre))
 	totalNumberOfRows := len(rre)
@@ -174,67 +198,53 @@ func getExcel11(string2 string) []string {
 		cellNameName := fmt.Sprintf("%s%d", "A", i)
 		cellValueName, _ := f.GetCellValue(sheetName, cellNameName)
 
-		//GET ONLY VISIBLE ROWS (FILTRED IN EXCEL)
+		cellNameType := fmt.Sprintf("%s%d", "M", i)
+		cellValueType, _ := f.GetCellValue(sheetName, cellNameType)
+
+		cellNameUnits := fmt.Sprintf("%s%d", "N", i)
+		cellValueUnits, _ := f.GetCellValue(sheetName, cellNameUnits)
+
+		cellNameDscr := fmt.Sprintf("%s%d", "B", i)
+		cellNameDscrs, _ := f.GetCellValue(sheetName, cellNameDscr)
+
+		csvLine := []string{cellValueName, cellValueType, cellValueUnits, cellNameDscrs}
+
+		//GET ONLY VISIBLE ROWS (FILTERED IN EXCEL)
 		include, _ := f.GetRowVisible(sheetName, i)
 		if include {
-			csvData = append(csvData, cellValueName)
+			csvData = append(csvData, csvLine)
 			//fmt.Printf("%s\t", cellValueName)
+			//fmt.Printf("%s\t", csvLine)
 		}
 
 	}
-	log.Println()
 
+	/*rows, err := f.Rows(f.GetSheetList()[0])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows.Next()
+	for rows.Next() {
+		row, err1 := rows.Columns()
+
+		if err1 != nil {
+			log.Fatal(err)
+		}
+		for _, colCell := range row {
+			fmt.Print(colCell, "\t")
+		}
+		fmt.Printf(row[20]) // Print values in columns B and D
+		return
+
+	}*/
+
+	/*cell, err1 := f.GetCellValue(f.GetSheetList()[0], "B2")
+	if err1 != nil {
+		fmt.Println(err1)
+	}
+	fmt.Println(cell)*/
 	f.Close()
 
 	return csvData
-}
-
-func OpFile(wTitle string) string {
-	result, err := cfdutil.ShowOpenFileDialog(cfd.DialogConfig{
-		Title: wTitle,
-		Role:  "OpenFileExample",
-		FileFilters: []cfd.FileFilter{
-			{
-				DisplayName: "Excel Files",
-				Pattern:     "*.xls;*.xlsx;*.xlsm",
-			},
-			{
-				DisplayName: "All Files (*.*)",
-				Pattern:     "*.*",
-			},
-		},
-		SelectedFileFilterIndex: 0,
-		FileName:                "file.xlsx",
-		DefaultExtension:        "xlsx",
-	})
-	if errors.Is(err, cfd.ErrorCancelled) {
-		log.Fatal("Dialog was cancelled by the user.")
-	} else if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Chosen file: %s\n", result)
-	return result
-}
-
-func SvFile() string {
-	fCsV, err2 := cfdutil.ShowSaveFileDialog(cfd.DialogConfig{
-		Title: "Save A File",
-		Role:  "SaveFileExample",
-		FileFilters: []cfd.FileFilter{
-			{
-				DisplayName: "Text Files (*.csv)",
-				Pattern:     "*.csv",
-			},
-		},
-		SelectedFileFilterIndex: 1,
-		FileName:                "export.csv",
-		DefaultExtension:        "csv",
-	})
-	if errors.Is(err2, cfd.ErrorCancelled) {
-		log.Fatal("Dialog was cancelled by the user.")
-	} else if err2 != nil {
-		log.Fatal(err2)
-	}
-	log.Printf("Chosen file: %s\n", fCsV)
-	return fCsV
 }

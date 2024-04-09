@@ -1,0 +1,34 @@
+flowFile = session.get();
+if(!flowFile)
+    return;
+
+DATE_FORMAT = 'yyyy-MM-dd';
+startDate = Date.parse(DATE_FORMAT, flowFile.getAttribute("start_date"));
+endDate = Date.parse(DATE_FORMAT, flowFile.getAttribute("end_date"));
+allFirstDates = "";
+
+Calendar calendar = Calendar.getInstance();
+Set firstDaysOfMonths = new LinkedHashSet();
+
+for (int i = 0; i <= endDate-startDate; i++) {
+    calendar.setTime(startDate.plus(i));
+                calendar.set(hourOfDay:16,minute:30)
+    firstDayOfMonth = calendar.getTimeInMillis();
+                //firstDayOfMonth.
+                firstDaysOfMonths.add(firstDayOfMonth/1000);
+                //firstDaysOfMonths.add(calendar.getTime().format(DATE_FORMAT));
+}
+
+firstDaysOfMonths.each {
+    firstDayOfMonth -> allFirstDates = allFirstDates + firstDayOfMonth + "\n";
+}
+
+
+for(dateF in firstDaysOfMonths){
+    def nFlowFile = session.clone(flowFile)
+    nFlowFile = session.putAttribute(nFlowFile,"dateTOdata", dateF.toString() );
+                session.transfer(nFlowFile, REL_SUCCESS)
+}
+
+session.remove(flowFile)
+
