@@ -2,15 +2,11 @@ package main
 
 import (
 	"bytes"
-	"context"
+	"encoding/csv"
 	"fmt"
 	"github.com/tadvi/winc"
 	"github.com/xuri/excelize/v2"
-	"golang.org/x/oauth2"
-	"log"
-	"net/http"
 	"os"
-	"time"
 )
 
 func btnOnClick(arg *winc.Event) {
@@ -35,12 +31,54 @@ func (item *Item) SetChecked(checked bool) { item.checked = checked }
 func (item Item) ImageIndex() int          { return 0 }
 
 func main() {
+	csvHeaders := []string{
+		"_Name",
+		"_Select(x)",
+		"_ValueType",
+		"_Delete(x)",
+		"_NewName",
+		"Accuracy",
+		"Archive",
+		"CalcAggregates",
+		"CalculationAlgorithmExpression",
+		"Compression",
+		"CompressionDeviation",
+		"CompressionTimeDeadBand",
+		"CompressionTimespan",
+		"CompressionType",
+		"Convers",
+		"Description",
+		"DictId",
+		"DictSource",
+		"EngUnits",
+		"InstrumentTag",
+		"Interpolation",
+		"Output",
+		"PointSource",
+		"Reception",
+		"SaveAddTs",
+		"SaveQuality",
+		"Scan",
+		"ScanClass",
+		"SecurityGroups",
+		"SourceCompression",
+		"SourceCompressionDeviation",
+		"SourceCompressionTimeDeadBand",
+		"SourceCompressionTimespan",
+		"SourceCompressionType",
+		"SourceTag",
+		"Span",
+		"SquareRoot",
+		"TTL",
+		"TotalCode",
+		"Zero",
+	}
 
 	//var opFlName11 string
 
-	var tagIds [][]string
+	var csvData11 [][]string
 	var items []Item
-	log.Println(tagIds)
+	var csvData [][]string
 
 	mainWindow := winc.NewForm(nil)
 
@@ -54,65 +92,6 @@ func main() {
 	openMn := fileMn.AddItem("Open", winc.Shortcut{winc.ModControl, winc.KeyO})
 	saveMn := fileMn.AddItem("Save", winc.Shortcut{winc.ModControl, winc.KeyS})
 	menu.Show()
-
-	edtAthUrl := winc.NewEdit(mainWindow)
-	edtAthUrl.SetPos(10, 20)
-	edtAthUrl.SetSize(200, 20)
-	edtAthUrl.SetText("Enter here Oauth2 url")
-
-	edtAthUsr := winc.NewEdit(mainWindow)
-	edtAthUsr.SetPos(10, 20)
-	edtAthUsr.SetSize(200, 20)
-	edtAthUsr.SetText("Enter here Oauth2 client user")
-
-	edtAthPwd := winc.NewEdit(mainWindow)
-	edtAthPwd.SetPos(10, 20)
-	edtAthPwd.SetSize(200, 20)
-	edtAthPwd.SetText("Enter here Oauth2 client password")
-
-	btnAuth := winc.NewPushButton(mainWindow)
-	btnAuth.SetText("Auth")
-	btnAuth.SetPos(0, 0)
-	btnAuth.SetSize(98, 38)
-	btnAuth.OnClick().Bind(func(arg *winc.Event) {
-		ctx := context.Background()
-
-		conf := &oauth2.Config{
-			ClientID:     "YOUR_CLIENT_ID",
-			ClientSecret: "YOUR_CLIENT_SECRET",
-			Scopes:       []string{"SCOPE1", "SCOPE2"},
-			Endpoint: oauth2.Endpoint{
-				TokenURL: "https://provider.com/o/oauth2/token",
-				AuthURL:  "https://provider.com/o/oauth2/auth",
-			},
-		}
-
-		// Redirect user to consent page to ask for permission
-		// for the scopes specified above.
-		url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
-		fmt.Printf("Visit the URL for the auth dialog: %v", url)
-
-		// Use the authorization code that is pushed to the redirect
-		// URL. Exchange will do the handshake to retrieve the
-		// initial access token. The HTTP Client returned by
-		// conf.Client will refresh the token as necessary.
-		var code string
-		if _, err := fmt.Scan(&code); err != nil {
-			log.Fatal(err)
-		}
-
-		// Use the custom HTTP client when requesting a token.
-		httpClient := &http.Client{Timeout: 2 * time.Second}
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
-
-		tok, err := conf.Exchange(ctx, code)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		client := conf.Client(ctx, tok)
-		_ = client
-	})
 
 	ls := winc.NewListView(mainWindow)
 	ls.EnableEditLabels(true)
@@ -143,10 +122,7 @@ func main() {
 		ls.DeleteAllItems()
 
 	})
-	edt := winc.NewEdit(mainWindow)
-	edt.SetPos(10, 20)
-	edt.SetSize(200, 20)
-	edt.SetText("edit text")
+
 	chk := winc.NewCheckBox(mainWindow)
 	chk.SetText("с фильтром")
 
@@ -169,15 +145,10 @@ func main() {
 
 	dock := winc.NewSimpleDock(mainWindow)
 	//mainWindow.SetLayout(dock)
-	dock.Dock(edtAthUrl, winc.Top)
-	dock.Dock(edtAthUsr, winc.Top)
-	dock.Dock(edtAthPwd, winc.Top)
-	dock.Dock(btnAuth, winc.Top)
 	dock.Dock(btnDelAll, winc.Top)
 	dock.Dock(btnSelAll, winc.Top)
 	dock.Dock(ls, winc.Left)
 	dock.Dock(split, winc.Left)
-	dock.Dock(edt, winc.Left)
 	dock.Dock(chk, winc.Left)
 
 	// if err := dock.LoadStateFile("layout.json"); err != nil {
@@ -188,25 +159,82 @@ func main() {
 			"Открыть 11 прил", "Excel files (*.xls;*.xlsx;*.xlsm)|*.xls;*.xlsx;*.xlsm|All files (*.*)|*.*", 0, ""); ok {
 
 			//opFlName11 = OpFile("Открыть 11 прил")
-			tagIds = getExcel11(filePath, chk.Checked())
+			csvData11 = getExcel11(filePath, chk.Checked())
 
-			for _, s := range tagIds {
+			for _, s := range csvData11 {
 				items = append(items, Item{[]string{s[0]}, false})
 
 			}
 			for _, s := range items {
 				ls.AddItem(&s)
 			}
+
 		}
 
 	})
 	saveMn.OnClick().Bind(func(arg *winc.Event) {
-		/*if filePath, ok := winc.ShowSaveFileDlg(mainWindow,
-			"Открыть 11 прил", "Excel files (*.xls;*.xlsx;*.xlsm)|*.xls;*.xlsx;*.xlsm|All files (*.*)|*.*", 0, ""); ok {
+		if filePathSv, ok := winc.ShowSaveFileDlg(mainWindow,
+			"Открыть 11 прил", "CSV files (*.csv)|*.csv|All files (*.*)|*.*", 0, ""); ok {
 
-			//opFlName11 = OpFile("Открыть 11 прил")
-
-		}*/
+			fmt.Printf("%s\t", "combine")
+			for _, element11 := range csvData11 {
+				csvLine := []string{
+					element11[0],
+					"x",
+					element11[1],
+					"",
+					"",
+					"ms",
+					"1",
+					"0",
+					"",
+					"0",
+					"0.5",
+					"0:00:00",
+					"0:00:10",
+					"swingingdoor",
+					"0",
+					element11[3],
+					"",
+					"local",
+					element11[2],
+					element11[0],
+					"0",
+					"0",
+					"[\"csv-import\"]",
+					"1",
+					"1",
+					"1",
+					"1",
+					"",
+					"[\"common\"]",
+					"0",
+					"0",
+					"0:00:00",
+					"0:00:00",
+					"deadband",
+					"",
+					"0",
+					"0",
+					"-1",
+					"0",
+					"0",
+				}
+				csvData = append(csvData, csvLine)
+			}
+			file2, err := os.Create(filePathSv + ".csv")
+			if err != nil {
+				panic(err)
+			}
+			defer file2.Close()
+			wr := csv.NewWriter(file2)
+			wr.Comma = ';'
+			wr.Write(csvHeaders)
+			for _, csvLine := range csvData {
+				wr.Write(csvLine)
+			}
+			wr.Flush()
+		}
 
 	})
 
@@ -282,6 +310,8 @@ func getExcel11(string2 string, onlyVisible bool) [][]string {
 				//fmt.Printf("%s\t", cellValueName)
 				//fmt.Printf("%s\t", csvLine)
 			}
+		} else {
+			csvData = append(csvData, csvLine)
 		}
 
 	}

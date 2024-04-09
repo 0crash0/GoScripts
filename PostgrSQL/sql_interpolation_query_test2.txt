@@ -1,0 +1,34 @@
+
+WITH aa(x0,y0) as (select * from (SELECT ("values"->>'721f3b8c-1297-4c70-8b5c-202a0d0d7843')::numeric as high, ("values"->>'6877f6c9-96ac-450b-a9b4-f96bf94fe38c')::numeric as mass
+
+                FROM public.directory_items
+
+                where directoryid='615a677b-b5c3-451c-9a07-b3b3f04f52f5' order by high) t
+
+                where high=trunc(%%A%%,1)),
+
+                bb(x1,y1) as (select * from (SELECT ("values"->>'721f3b8c-1297-4c70-8b5c-202a0d0d7843')::numeric as high, ("values"->>'6877f6c9-96ac-450b-a9b4-f96bf94fe38c')::numeric as mass
+
+                FROM public.directory_items
+
+                where directoryid='615a677b-b5c3-451c-9a07-b3b3f04f52f5' order by high) t
+
+                where   high=round(%%A%%,1))
+
+                             
+
+select
+
+                case
+
+                               when %%A%%=round(%%A%%,1) then aa.y0
+
+                else
+
+                               (aa.y0 + (%%A%%-aa.x0)*((bb.y1-aa.y0)/(bb.x1-aa.x0)))
+
+                end
+
+                as field3
+
+from aa, bb;
