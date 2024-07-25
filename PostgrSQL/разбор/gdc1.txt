@@ -1,0 +1,24 @@
+Вот пример запроса списка термоцистерн на разогреве для САЗ:
+SELECT [GD_WAY] -- Путь
+                ,[NPP_CAR] -- Порядковый номер цистерны
+                ,[CAR_NUM] -- ЖД-номер цистерны
+                ,[DT] -- Метка времени
+                ,SUBSTRING([POST_NAME], 4, 2) -- Номер поста разогрева
+FROM OPENQUERY(ASUZDC, 'select * from TABLE(GDC.AP_INTERFACE_LIB.AF_GETCARS_LOCATION(2,SYSDATE))')
+  where
+  [GD_WAY] IN ('46', '45')
+  AND [KP] = 205 -- Производство электродов
+  AND [RW_SORT] =  '7' -- Цистерна
+  AND [RW_KG] = '471052' -- Пек каменноугольный жидкий
+  AND [STATE_TYPE] = 4 -- На разогреве груженый вх
+  AND RIGHT(ISNULL([POST_NAME], ' '), 1)<>N'к'
+ORDER BY [GD_WAY] ASC, CAST(SUBSTRING(ISNULL([POST_NAME], '0'), 4, 2) AS INTEGER) ASC
+
+
+SELECT DISTINCT CAR_NUM FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_LOCATION WHERE 
+(GD_WAY=46 OR GD_WAY=45)
+AND KP='205'
+AND RW_SORT=  '7'
+AND RW_KG::INTEGER = 471052 
+AND STATE_TYPE='4'
+AND DT::date=CURRENT_DATE

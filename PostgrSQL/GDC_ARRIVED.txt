@@ -1,0 +1,8 @@
+select t.car_num, tt.kg_shortname,ttt.st_name,tttt.sort_rep_name from (SELECT distinct  car_num,rw_st,rw_kg,rw_sort
+                FROM public.gdc_ap_interface_lib_af_getcars_arrived where dt::date=CURRENT_DATE) t
+left join public.gdc_ap_interface_lib_hcargo as tt
+on   t.rw_kg::integer =  tt.rw_kg
+left join public.gdc_ap_interface_lib_hstation as ttt
+on   t.rw_st =  ttt.rw_st
+left join public.gdc_ap_interface_lib_hrwcar_sort as tttt
+on   t.rw_sort like '%'|| tttt.rw_sort || '%'

@@ -1,0 +1,20 @@
+TEP_PR1.2.2.1.1 - 1.2.2.1.1 А85 и выше , %
+TEP_PR1.2.2.1.2 - 1.2.2.1.2 А8, %
+
+TEP_PR1.2.2.1.3 - 1.2.2.1.3 А7 , %
+TEP_PR1.2.2.1.4 - 1.2.2.1.4 А7Э , %
+
+
+
+
+select cyear,cmonth,sum(CAST(goals1 AS NUMERIC))
+from nkaz_v_all_prod 
+where ENTITY = 'BU_AL_NKAZ' and  (account='TEP_PR1.2.2.1.1' OR account='TEP_PR1.2.2.1.2' OR account='TEP_PR1.2.2.1.2'  OR account='TEP_PR1.2.2.1.3'  OR account='TEP_PR1.2.2.1.4') and cmonth='05'
+group by cmonth,cyear 
+
+
+
+select entity,cyear,cmonth,sum(CAST(goals1 AS NUMERIC))
+from nkaz_v_all_prod 
+where entity LIKE '%NKAZ%' and (account='TEP_PR1.2.2.1.1' OR account='TEP_PR1.2.2.1.2' OR account='TEP_PR1.2.2.1.2'  OR account='TEP_PR1.2.2.1.3'  OR account='TEP_PR1.2.2.1.4') and cmonth='05'
+group by cmonth,cyear,entity

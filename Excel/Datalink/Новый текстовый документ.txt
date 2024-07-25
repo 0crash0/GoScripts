@@ -1,0 +1,14 @@
+select  tt.kg_shortname,ttt.st_name, count(*), tttt.sort_rep_name from (
+SELECT car_num, kpr_home, gd_st, gd_way, npp_car, kp, rw_st, dt, sign_cargo, rw_sort, rw_kg, cargo_weight, type_cargo, state_type, state_name, post_name, date_update
+                FROM public.gdc_ap_interface_lib_af_getcars_location
+                WHERE  dt::date between CURRENT_DATE+interval'0hour' and CURRENT_DATE+interval'6hour' and type_cargo=1 and state_type=0 and DATE_TRUNC('hour',date_update) in (SELECT max (DATE_TRUNC('hour',date_update))
+                FROM public.gdc_ap_interface_lib_af_getcars_location where  dt::date between CURRENT_DATE+interval'0hour' and CURRENT_DATE+interval'6hour')  and rw_kg != ''
+                order by car_num
+) t
+left join public.gdc_ap_interface_lib_hcargo as tt
+on   t.rw_kg::integer =  tt.rw_kg
+left join public.gdc_ap_interface_lib_hstation as ttt
+on   t.rw_st =  ttt.rw_st
+left join public.gdc_ap_interface_lib_hrwcar_sort as tttt
+on   t.rw_sort like '%'|| tttt.rw_sort || '%'
+group by tt.kg_shortname,ttt.st_name,tttt.sort_rep_name

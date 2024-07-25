@@ -1,0 +1,8 @@
+select query_to_xml('SELECT rw_pack, pack_name, pr_mest, date_update
+                FROM public.gdc_ap_interface_lib_hcargo_pack
+                limit 10',true,false,''
+                )
+                
+                SELECT jsonb_agg(json_build_object('rw_pack',rw_pack,'pack_name', pack_name,'pr_mest', pr_mest,'date_update', date_update))
+                FROM public.gdc_ap_interface_lib_hcargo_pack
+                limit 10

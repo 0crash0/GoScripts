@@ -1,0 +1,178 @@
+*********************************************************************************************HELP
+last day of month
+CAST(DATE_TRUNC('month',CURRENT_DATE + INTERVAL '1 month' )- INTERVAL '1 day' as DATE)
+first day of month
+CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE)
+
+num last day of month
+extract('day' from (DATE_TRUNC('month',CURRENT_DATE + INTERVAL '1 month' )- INTERVAL '1 day' ))::numeric
+
+*****************************************
+first day of mont
+
+select (CURRENT_DATE - (DATE_PART('day',CURRENT_DATE)::integer)+1)
+
+select CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE)
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------                +++++
+Исполнение плана по отгрузке ГП. Вагоны крытые. За сутки. Факт
+SELECT COUNT(CAR_NUM) FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE RW_SORT LIKE '2%' AND DT::date=CURRENT_DATE
+
+SELECT COUNT(CAR_NUM),CURRENT_DATE as DT FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE RW_SORT LIKE '2%' AND DT::date=CURRENT_DATE
+
+
+that thing came to 
+!
+SELECT COUNT(distinct CAR_NUM),CURRENT_DATE-3 as DT FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE CARGO_WEIGHT != '0' AND DT::date=CURRENT_DATE-3
+
+
+------------------------------------------------------------------------------------------------------------------------------------                +++++
+Исполнение плана по отгрузке ГП. Вагоны крытые. Накопительно. Факт
+
+SELECT COUNT(CAR_NUM) FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE RW_SORT LIKE '2%' AND (DT::date BETWEEN CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE) AND CURRENT_DATE)
+
+!
+SELECT COUNT( CAR_NUM),CURRENT_DATE-2 as DT FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE CARGO_WEIGHT != '0' AND (DT::date BETWEEN CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE) AND CURRENT_DATE-2)
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------   THERE IS THESE PARAMETERS IN RAPORT
+Исполнение плана по отгрузке ГП. Полувагоны.За сутки. Факт
+
+SELECT COUNT(CAR_NUM) FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE RW_SORT LIKE '6%' AND DT::date=CURRENT_DATE
+
+SELECT COUNT(CAR_NUM) FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE RW_SORT LIKE '6%' AND CARGO_WEIGHT>0 AND DT::date=CURRENT_DATE
+------------------------------------------------------------------------------------------------------------------------------------   THERE IS THESE PARAMETERS IN RAPORT
+Исполнение плана по отгрузке ГП. Полувагоны.Накопительно. Факт
+
+SELECT COUNT(CAR_NUM) FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE RW_SORT LIKE '6%' AND (DT::date BETWEEN CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE) AND CURRENT_DATE)
+
+SELECT COUNT(CAR_NUM), CURRENT_DATE as DT FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE sign_cargo=1 AND RW_SORT LIKE '6%' AND (DT::date BETWEEN CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE) AND CURRENT_DATE)
+
+
+------------------------------------------------------------------------------------------------------------------------------------                +++++
+Исполнение плана по отгрузке ГП. Контейнера.За сутки. Факт
+
+SELECT COUNT(CAR_NUM) FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCONT_SENDED WHERE  DT::date=CURRENT_DATE
+
+-2 to 19 Feb
+SELECT COUNT( DISTINCT CAR_NUM),CURRENT_DATE-2 AS DT FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCONT_SENDED WHERE  DT::date=CURRENT_DATE-2
+
+filter duplicates:
+SELECT * FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCONT_SENDED WHERE  DT::date=CURRENT_DATE-3 AND date_update::date in (SELECT max(date_update::date) FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCONT_SENDED WHERE  DT::date=CURRENT_DATE-3)
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------                +++++
+Исполнение плана по отгрузке ГП. Контейнера.Накопительно. Факт
+
+SELECT COUNT(CAR_NUM) FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCONT_SENDED WHERE AND (DT::date BETWEEN CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE) AND CURRENT_DATE-2)
+
+SELECT COUNT(CAR_NUM), CURRENT_DATE AS DT FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCONT_SENDED WHERE sign_cargo=1 AND (DT::date BETWEEN CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE) AND CURRENT_DATE) 
+
+
+------------------------------------------------------------------------------------------------------------------------------------  +++
+Исполнение плана по отгрузке ГП. ОТГРУЖЕНО ВСЕГО.За сутки. Факт
+отправлено вагонов + отправлено контейнеров + отправлено самовывоз
+
+select sum(counter)  as counter
+from
+(SELECT COUNT(CAR_NUM) as counter FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE RW_SORT LIKE '2%' AND DT::date=CURRENT_DATE
+union all
+SELECT COUNT(CAR_NUM) as counter FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE RW_SORT LIKE '6%' AND DT::date=CURRENT_DATE
+union all
+SELECT COUNT(CAR_NUM) as counter FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCONT_SENDED WHERE  DT::date=CURRENT_DATE
+) as temp_table
+
+
+
+select sum(SUM),CURRENT_DATE-2 as DT
+from
+(SELECT SUM(cargo_weight),CURRENT_DATE-2 as DT FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE CARGO_WEIGHT != '0' AND DT::date=CURRENT_DATE-2
+union all
+SELECT SUM(cargo_weight),CURRENT_DATE-2 AS DT FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCONT_SENDED WHERE  DT::date=CURRENT_DATE-2
+) as temp_table
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------  +++
+Исполнение плана по отгрузке ГП. ОТГРУЖЕНО ВСЕГО.Накопительно. Факт
+
+select sum(counter)  as counter
+from
+(SELECT COUNT(CAR_NUM) as counter FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE RW_SORT LIKE '2%' AND (DT::date BETWEEN CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE) AND CURRENT_DATE)
+union all
+SELECT COUNT(CAR_NUM) as counter FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE RW_SORT LIKE '6%' AND (DT::date BETWEEN CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE) AND CURRENT_DATE)
+union all
+SELECT COUNT(CAR_NUM) as counter FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCONT_SENDED WHERE  (DT::date BETWEEN CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE) AND CURRENT_DATE)
+) as temp_table
+
+
+
+select sum(SUM),CURRENT_DATE-2 as DT
+from
+(SELECT SUM(cargo_weight),CURRENT_DATE-2 as DT FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_SENDED WHERE CARGO_WEIGHT != '0' AND (DT::date BETWEEN CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE) AND CURRENT_DATE)
+union all
+SELECT SUM(cargo_weight),CURRENT_DATE-2 AS DT FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCONT_SENDED WHERE  (DT::date BETWEEN CAST(DATE_TRUNC('month',CURRENT_DATE) as DATE) AND CURRENT_DATE)
+) as temp_table
+
+
+
+
+
+-------------------------------------------------------------------------------------------------
+МНЕМОСХЕМЫ:
+--------------------------------------------------------------------------------------------------
+ОЗ.Общецеховой.Общеузловой.Количество.Количество вагонов с коксом на заводе на текущий момент
+
+SELECT COUNT(CAR_NUM) FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_LOCATION WHERE
+ RW_KG='171083'
+ AND DT::date=CURRENT_DATE
+ 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ SELECT *
+	FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_LOCATION A
+	LEFT JOIN public.gdc_ap_interface_lib_hcargo B ON A.rw_kg::INTEGER=B.rw_kg
+	WHERE A.RW_KG::INTEGER != 0 AND A.DT::DATE=CURRENT_DATE
+	
+	
+	
+	SELECT *
+	FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_LOCATION A
+	LEFT JOIN public.gdc_ap_interface_lib_hcargo B ON A.rw_kg::INTEGER=B.rw_kg
+	WHERE A.RW_KG::INTEGER != 0 AND A.DT::DATE=CURRENT_DATE AND B.KG_SHORTNAME LIKE '%Кокс%'
+	
+	
+	SELECT COUNT(DISTINCT CAR_NUM)
+	FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_LOCATION A
+	LEFT JOIN public.gdc_ap_interface_lib_hcargo B ON A.rw_kg::INTEGER=B.rw_kg
+	WHERE A.RW_KG::INTEGER != 0 AND A.DT::DATE=CURRENT_DATE AND B.KG_SHORTNAME LIKE '%Кокс%'
+	
+	171079
+222105
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	SELECT COUNT(DISTINCT CAR_NUM),CURRENT_DATE as DT
+	FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_LOCATION rw_kg
+	WHERE (RW_KG::INTEGER = 171079 OR RW_KG::INTEGER = 222105) AND DT::DATE=CURRENT_DATE
+	
+	
+---------------------------------------------------------------------------------------------------------
+ОЗ.Общецеховой.Общеузловой.Количество.Количество термоцистерн на заводе на текущий момент
+SELECT *
+	FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_LOCATION A
+	LEFT JOIN public.gdc_ap_interface_lib_hcargo B ON A.rw_kg::INTEGER=B.rw_kg
+	WHERE A.RW_KG::INTEGER != 0 AND A.DT::DATE=CURRENT_DATE AND A.RW_SORT::INTEGER = 7
+
+SELECT COUNT(DISTINCT CAR_NUM),CURRENT_DATE as DT
+	FROM PUBLIC.GDC_AP_INTERFACE_LIB_AF_GETCARS_LOCATION
+	WHERE RW_KG::INTEGER != 0 AND RW_SORT::INTEGER = 7 AND DT::DATE=CURRENT_DATE
+
